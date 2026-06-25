@@ -1,0 +1,52 @@
+*** Begin Patch
+*** Update File: src/App.tsx
+@@
+-  useEffect(() => {
+-    if (!loading) loadKanjis(user?.uid ?? null);
+-  }, [user, loading]);
+-
+-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+-    event.preventDefault();
+-    if (!kanji.trim() || !reading.trim() || !meaning.trim()) {
+-      setStatus('Kanji, reading, and meaning are required.');
+-      return;
+-    }
++  useEffect(() => {
++    if (!loading) loadKanjis(user?.uid ?? null);
++  }, [user, loading]);
++
++  const handleKanjiChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
++    const val = e.target.value.trim();
++    setKanji(val);
++    setAutoFilled(false);
++    setReading('');
++    setMeaning('');
++    if (!val) {
++      setStatus('');
++      return;
++    }
++    if (!isKanjiOnly(val)) {
++      setStatus('Please enter only Kanji characters.');
++      return;
++    }
++    setStatus('Looking up reading and meaning...');
++    try {
++      const hira = await toHiragana(val);
++      const meaningText = await lookupMeaning(val);
++      setReading(hira || '');
++      setMeaning(meaningText || '');
++      setAutoFilled(true);
++      setStatus(meaningText ? '' : 'No meaning found; you can still save notes.');
++    } catch (err) {
++      console.error(err);
++      setStatus('Lookup failed.');
++    }
++  };
++
++  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
++    event.preventDefault();
++    if (!kanji.trim() || !reading.trim() || !meaning.trim()) {
++      setStatus('Kanji, reading, and meaning are required.');
++      return;
++    }
+*** End Patch
