@@ -3,7 +3,11 @@ export async function lookupJapaneseData(text: string) {
     const query = text.trim();
     if (!query) return { word: '', reading: '', meaning: '' };
 
-    const res = await fetch(`/jisho?keyword=${encodeURIComponent(query)}`);
+    const API_BASE = import.meta.env.VITE_API_BASE || '';
+
+    const res = await fetch(
+      `${API_BASE}/jisho?keyword=${encodeURIComponent(query)}`
+    );
     if (!res.ok) return { word: '', reading: '', meaning: '' };
 
     const json = await res.json();

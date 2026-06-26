@@ -40,24 +40,50 @@ export default function KanjiReadingQuiz({ items }: Props) {
   if (!currentItem) {
     return <p>Add at least one kanji to start the reading quiz.</p>;
   }
-
   return (
-    <div className="quiz-card">
-      <h3>Kanji → Hiragana</h3>
-      <p className="quiz-prompt">What is the reading for <strong>{currentItem.kanji}</strong>?</p>
+    <div className="modern-quiz-card">
+      <div className="quiz-header">
+        <div className="quiz-badge">
+          Kanji → Hiragana
+        </div>
+
+        <div className="quiz-stats">
+          <span>Score: {score}</span>
+          <span>Streak: {streak}</span>
+        </div>
+      </div>
+
+      <p className="quiz-prompt">
+        What is the reading for this kanji?
+      </p>
+
+      <div className="quiz-question kanji-question">
+        {currentItem.kanji}
+      </div>
+
       <form onSubmit={handleSubmit} className="quiz-answer-form">
         <input
+          className="quiz-input"
           value={answer}
           onChange={(e) => setAnswer(e.target.value)}
           placeholder="Type hiragana reading"
+          autoFocus
         />
-        <button type="submit">Submit</button>
+
+        <button
+          type="submit"
+          className="quiz-submit"
+          disabled={!answer.trim()}
+        >
+          Submit
+        </button>
       </form>
-      {feedback && <div className="quiz-feedback">{feedback}</div>}
-      <div className="quiz-stats">
-        <span>Score: {score}</span>
-        <span>Streak: {streak}</span>
-      </div>
+
+      {feedback && (
+        <div className="quiz-feedback">
+          {feedback}
+        </div>
+      )}
     </div>
   );
 }

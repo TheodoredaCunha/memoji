@@ -45,30 +45,54 @@ export default function MeaningQuiz({ items }: Props) {
   }
 
   return (
-    <div className="quiz-card">
-      <h3>Meaning → Choose Kanji</h3>
-      <p className="quiz-prompt">Which kanji matches this meaning?</p>
-      <p className="quiz-target">{currentItem.meaning}</p>
-      <form onSubmit={handleSubmit} className="quiz-options-form">
-        {options.map((option) => (
-          <label key={option.id} className="quiz-option">
-            <input
-              type="radio"
-              name="kanji-choice"
-              value={option.id}
-              checked={selectedId === option.id}
-              onChange={() => setSelectedId(option.id as string)}
-            />
-            {option.kanji}
-          </label>
-        ))}
-        <button type="submit" disabled={!selectedId}>Submit</button>
-      </form>
-      {feedback && <div className="quiz-feedback">{feedback}</div>}
-      <div className="quiz-stats">
-        <span>Score: {score}</span>
-        <span>Streak: {streak}</span>
+    <div className="modern-quiz-card">
+      <div className="quiz-header">
+        <div className="quiz-badge">
+          Meaning → Kanji
+        </div>
+
+        <div className="quiz-stats">
+          <span>Score: {score}</span>
+          <span>Streak: {streak}</span>
+        </div>
       </div>
+
+      <p className="quiz-prompt">
+        Which kanji matches this meaning?
+      </p>
+
+      <div className="quiz-question">
+        {currentItem.meaning}
+      </div>
+
+      <form onSubmit={handleSubmit} className="quiz-options">
+        {options.map((option) => (
+          <button
+            key={option.id}
+            type="button"
+            className={`quiz-option ${
+              selectedId === option.id ? 'selected' : ''
+            }`}
+            onClick={() => setSelectedId(option.id as string)}
+          >
+            {option.kanji}
+          </button>
+        ))}
+
+        <button
+          type="submit"
+          className="quiz-submit"
+          disabled={!selectedId}
+        >
+          Submit
+        </button>
+      </form>
+
+      {feedback && (
+        <div className="quiz-feedback">
+          {feedback}
+        </div>
+      )}
     </div>
   );
 }
