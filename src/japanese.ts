@@ -1,39 +1,44 @@
-export async function lookupJapaneseData(text: string) {
+export interface JapaneseLookupResult {
+  word: string;
+  reading: string;
+  pronunciation: string;
+  meaning: string;
+}
+
+const EMPTY_RESULT: JapaneseLookupResult = {
+  word: '',
+  reading: '',
+  pronunciation: '',
+  meaning: '',
+};
+
+export async function lookupJapaneseData(text: string): Promise<JapaneseLookupResult> {
   try {
     const query = text.trim();
-    if (!query) return { word: '', reading: '', meaning: '' };
+    if (!query) return { ...EMPTY_RESULT };
 
-    const API_BASE = import.meta.env.VITE_API_BASE || '';
+    const response = await fetch('/api/lookup', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ text: query }),
+    });
 
-    const res = await fetch(
-      `${API_BASE}/jisho?keyword=${encodeURIComponent(query)}`
-    );
-    if (!res.ok) return { word: '', reading: '', meaning: '' };
+    if (!response.ok) {
+      console.error('Backend lookup failed', await response.text());
+      return { ...EMPTY_RESULT };
+    }
 
-    const json = await res.json();
-    if (!json.data?.length) return { word: '', reading: '', meaning: '' };
-
-    // Strongest match: exact slug
-    const entry =
-      json.data.find((e: any) => e.slug === query) ||
-      json.data.find((e: any) =>
-        e.japanese?.some((j: any) => j.word === query)
-      ) ||
-      json.data[0];
-
-    // Prefer full-word match
-    const jp =
-      entry.japanese.find((j: any) => j.word === query) ||
-      entry.japanese.find((j: any) => j.reading?.length > 1) ||
-      entry.japanese[0];
-
+    const data = await response.json();
     return {
-      word: jp.word || jp.reading || '',
-      reading: jp.reading || '',
-      meaning: entry.senses?.[0]?.english_definitions?.join(', ') || '',
+      word: data.word || query,
+      reading: data.reading || '',
+      pronunciation: data.pronunciation || '',
+      meaning: data.meaning || '',
     };
-  } catch (err) {
-    console.error(err);
-    return { word: '', reading: '', meaning: '' };
+  } catch (error) {
+    console.error('Lookup failed entirely:', error);
+    return { ...EMPTY_RESULT };
   }
 }

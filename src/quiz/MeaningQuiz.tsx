@@ -1,13 +1,12 @@
 import { useMemo, useState } from 'react';
 import { KanjiData } from '../firestore';
-import { buildMeaningOptions, shuffleArray } from './quizUtils';
+import { buildMeaningOptions } from './quizUtils';
 
 type Props = {
   items: KanjiData[];
 };
 
 export default function MeaningQuiz({ items }: Props) {
-  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
   const [score, setScore] = useState(0);
   const [streak, setStreak] = useState(0);
@@ -23,11 +22,11 @@ export default function MeaningQuiz({ items }: Props) {
     return buildMeaningOptions(items, currentItem.id as string);
   }, [currentItem, items]);
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    if (!currentItem || !selectedId) return;
+  const handleAnswer = (selectedId: string) => {
+    if (!currentItem) return;
 
     const correct = selectedId === currentItem.id;
+
     if (correct) {
       setFeedback('Correct!');
       setScore((value) => value + 1);
@@ -36,8 +35,11 @@ export default function MeaningQuiz({ items }: Props) {
       setFeedback(`Incorrect. The right answer is ${currentItem.kanji}.`);
       setStreak(0);
     }
-    setSelectedId(null);
-    setRound((value) => value + 1);
+
+    setTimeout(() => {
+      setFeedback(null);
+      setRound((value) => value + 1);
+    }, 1000);
   };
 
   if (!currentItem) {
@@ -65,28 +67,17 @@ export default function MeaningQuiz({ items }: Props) {
         {currentItem.meaning}
       </div>
 
-      <form onSubmit={handleSubmit} className="quiz-options">
+      <div className="quiz-options">
         {options.map((option) => (
           <button
             key={option.id}
-            type="button"
-            className={`quiz-option ${
-              selectedId === option.id ? 'selected' : ''
-            }`}
-            onClick={() => setSelectedId(option.id as string)}
+            className="quiz-option"
+            onClick={() => handleAnswer(option.id as string)}
           >
             {option.kanji}
           </button>
         ))}
-
-        <button
-          type="submit"
-          className="quiz-submit"
-          disabled={!selectedId}
-        >
-          Submit
-        </button>
-      </form>
+      </div>
 
       {feedback && (
         <div className="quiz-feedback">

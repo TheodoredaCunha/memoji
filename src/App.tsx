@@ -25,7 +25,7 @@ function App() {
   const [notes, setNotes] = useState('');
   const [view, setView] = useState<'list' | 'add' | 'quiz'>('list');
   const [isQuizStarted, setIsQuizStarted] = useState(false);
-  const [quizMode, setQuizMode] = useState<QuizMode>('random');
+  const [quizMode, setQuizMode] = useState<QuizMode>('kanji-reading');
   const [activeQuizMode, setActiveQuizMode] = useState<QuizMode>('kanji-reading');
   const [kanjis, setKanjis] = useState<KanjiEntry[]>([]);
   const [status, setStatus] = useState('');
@@ -70,6 +70,16 @@ function App() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [selectedEntry]);
 
+  useEffect(() => {
+  if (!status) return;
+
+  const timer = setTimeout(() => {
+    setStatus('');
+  }, 2500);
+
+  return () => clearTimeout(timer);
+  }, [status]);
+
 
 const latestLookup = useRef(0);
 
@@ -100,6 +110,7 @@ const handleKanjiChange = async (val: string) => {
     } else {
       setStatus('');
     }
+    console.log('Lookup result:', result);
   } catch (err) {
     console.error(err);
     setStatus('Lookup failed.');
@@ -163,8 +174,8 @@ const handleKanjiChange = async (val: string) => {
   return (
     <div className="app-shell">
       <header className="hero">
-        <h1>Kanji Flashcards</h1>
-        <p>Save kanji with reading, meaning, and notes, then practice with flashcard quizzes.</p>
+        <h1>Flashcards</h1>
+        <p>Save Japanese words, phrases, and kanji, then practice with flashcard quizzes.</p>
         <div style={{ marginTop: 12 }}>
           {user ? (
             <>
@@ -199,7 +210,11 @@ const handleKanjiChange = async (val: string) => {
         </div>
       )}
 
-      {status && <p className="status">{status}</p>}
+      {status && (
+        <div className="toast-notification">
+          {status}
+        </div>
+      )}
 
       <main>
         {view === 'add' && (
@@ -208,7 +223,17 @@ const handleKanjiChange = async (val: string) => {
             <form onSubmit={handleSubmit} className="kanji-form">
               <label>
                 Kanji
-                <input value={kanji} onChange={(e) => handleKanjiChange(e.target.value)} placeholder="日" />
+              <input 
+                defaultValue={kanji} 
+                placeholder="日" 
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault(); 
+                    handleKanjiChange(e.currentTarget.value); // Changed target to currentTarget
+                  }
+                }} 
+                onBlur={(e) => handleKanjiChange(e.currentTarget.value)} // Changed target to currentTarget
+              />
               </label>
               <label>
                 Hiragana / Reading
@@ -246,11 +271,17 @@ const handleKanjiChange = async (val: string) => {
                     <div>{entry.reading}</div>
                     <div>{entry.meaning}</div>
                     <div style={{ marginTop: 8 }}>
-                      <button onClick={async () => {
+                      <button
+                      onClick={async (e) => {
+                        e.stopPropagation();
+
                         if (!user) return;
                         await removeKanji(user.uid, entry.id);
                         loadKanjis(user.uid);
-                      }}>Remove</button>
+                      }}
+                    >
+                      Remove
+                    </button>
                     </div>
                   </article>
                 ))}
